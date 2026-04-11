@@ -582,12 +582,12 @@ jobs:
 
           echo "已更新 get_ksu_version_full 模板: $VERSION_TEMPLATE"
 
-      # ==================== 应用 SUSFS 补丁 ====================
-      # SUSFS (Super User SUS FileSystem) 用于隐藏 root 痕迹
-       name: 应用 SUSFS 补丁
-       if: inputs.enable_susfs
-       working-directory: ${{ env.KERNEL_ROOT }}
-       run: |
+        # ==================== 应用 SUSFS 补丁 ====================
+        # SUSFS (Super User SUS FileSystem) 用于隐藏 root 痕迹
+    name: 应用 SUSFS 补丁
+    if: inputs.enable_susfs
+    working-directory: ${{ env.KERNEL_ROOT }}
+    run: |
           echo "应用 SUSFS 补丁..."
           # 读取 SUSFS 上游版本（例如 v2.1.0），用于匹配 wild 修复补丁目录
           SUSFS_VERSION=$(grep -E '^#define[[:space:]]+SUSFS_VERSION' "$SUSFS4KSU/kernel_patches/include/linux/susfs.h" | awk '{print $3}' | tr -d '"' | sed 's/^v//')
