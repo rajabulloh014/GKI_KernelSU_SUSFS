@@ -584,13 +584,21 @@ jobs:
 
       # ==================== 应用 SUSFS 补丁 ====================
       # SUSFS (Super User SUS FileSystem) 用于隐藏 root 痕迹
-      - name: 应用 SUSFS 补丁
-        if: inputs.enable_susfs
-        working-directory: ${{ env.KERNEL_ROOT }}
-        run: |
+       name: 应用 SUSFS 补丁
+       if: inputs.enable_susfs
+       working-directory: ${{ env.KERNEL_ROOT }}
+       run: |
           echo "应用 SUSFS 补丁..."
-          SUSFS_VERSION="2.0.0"
-
+          # 读取 SUSFS 上游版本（例如 v2.1.0），用于匹配 wild 修复补丁目录
+          SUSFS_VERSION=$(grep -E '^#define[[:space:]]+SUSFS_VERSION' "$SUSFS4KSU/kernel_patches/include/linux/susfs.h" | awk '{print $3}' | tr -d '"' | sed 's/^v//')
+          if [ -z "$SUSFS_VERSION" ]; then
+            SUSFS_VERSION="2.0.0"
+          fi
+          if [ ! -d "$KERNEL_PATCHES/wild/susfs_fix_patches/v${SUSFS_VERSION}" ]; then
+            echo "未找到 wild/susfs_fix_patches/v${SUSFS_VERSION}，回退 v2.0.0"
+            SUSFS_VERSION="2.0.0"
+          fi
+          echo "SUSFS 修复补丁版本: v${SUSFS_VERSION}"
           # 复制 SUSFS 基础文件
           cp $SUSFS4KSU/kernel_patches/50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch ./common/
           cp $SUSFS4KSU/kernel_patches/fs/* ./common/fs/
