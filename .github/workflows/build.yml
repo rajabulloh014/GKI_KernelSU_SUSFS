@@ -691,6 +691,12 @@ jobs:
           cp $SUKISU_PATCHES/other/zram/zram_patch/${{ inputs.kernel_version }}/lz4k_oplus.patch ./
           patch -p1 -F 3 < lz4k_oplus.patch || true
 
+      - name: Setup BBRv3
+        uses: ./.github/actions/bbr
+        with:
+         kernel_version: ${{ steps.parse.outputs.kernel_version }}
+    
+
       # ==================== 修复 6.6 WiFi/蓝牙兼容性（三星 + 小米） ====================
       - name: 修复 6.6 WiFi/蓝牙兼容性（三星 + 小米）
         if: inputs.kernel_version == '6.6'
