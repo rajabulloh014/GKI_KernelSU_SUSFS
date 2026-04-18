@@ -10,7 +10,7 @@ runs:
   steps:
     - name: Extract BBG Version
       shell: bash
-      working-directory: ${{ env.KERNEL_ROOT }}/kernel/common
+      working-directory: ${{ env.KERNEL_ROOT }}/common
       run: |
         if [ "$inputs.kernel_version" == "6.1" ]; then
           cp $GITHUB_WORKSPACE/kernel_patches/bbrv3-a14-6.1.patch $GITHUB_WORKSPACE/kernel/common
@@ -20,7 +20,7 @@ runs:
     - name: Fix modules.bzl
       shell: bash
       if: false
-      working-directory: ${{ env.KERNEL_ROOT }}/kernel/common
+      working-directory: ${{ env.KERNEL_ROOT }}/common
       run: |
         if [ "$inputs.kernel_version" == "6.1" ]; then
           mods_file=modules.bzl
@@ -32,7 +32,7 @@ runs:
 
     - name: Add BBRv3 Config
       shell: bash
-      working-directory: ${{ env.KERNEL_ROOT }}/kernel
+      working-directory: ${{ env.KERNEL_ROOT }}
       run: |
         cat >> "${{ env.KERNEL_ROOT }}/wild_gki.fragment" << 'EOF'
         CONFIG_TCP_CONG_ADVANCED=y
