@@ -34,7 +34,7 @@ runs:
       shell: bash
       working-directory: ${{ env.KERNEL_ROOT }}/kernel
       run: |
-        cat >> "${{ github.workspace }}/wild_gki.fragment" << 'EOF'
+        cat >> "${{ env.KERNEL_ROOT }}/wild_gki.fragment" << 'EOF'
         CONFIG_TCP_CONG_ADVANCED=y
         CONFIG_TCP_CONG_BBR=y
         CONFIG_DEFAULT_BBR=y
