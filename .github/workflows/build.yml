@@ -653,7 +653,6 @@ jobs:
           fi
 
       - name: 设置BBR为默认拥塞算法
-        if: ${{ inputs.set_defbbr }}
         run: |
           CONFIG_FILE="$CONFIG/common/arch/arm64/configs/gki_defconfig"
           echo "Changing to configuration directory: $CONFIG_FILE..."
