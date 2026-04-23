@@ -1,16 +1,8 @@
 # ========================================
-# GKI 内核构建主入口
+# GKI 内核构建主入口 (TEST2 - Fokus A14 6.1)
 # ========================================
-# 此工作流是项目的统一入口点，用于：
-# 1. 构建所有版本的 GKI 内核
-# 2. 获取最新的 KSU 管理器
-# 3. 收集补丁冲突文件用于调试
-# 4. 创建 GitHub Release (可选)
-# ========================================
-
 name: TEST2
 
-# 并发控制：同一分支只运行一个实例，新运行会取消旧的
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -100,7 +92,7 @@ on:
           - 'Off'
         default: 'Off'
 
-      # ==================== Opsi Baru: Tick Rate & Optimization Level ====================
+      # ==================== Opsi Tick Rate & Optimization Level ====================
       optimizationLevel:
         description: "Compiler optimization level"
         required: false
@@ -137,7 +129,7 @@ on:
       build_a14_6_1:
         description: "Android 14 - 6.1"
         type: boolean
-        default: false
+        default: true   # Hanya ini yang aktif
       build_a15_6_6:
         description: "Android 15 - 6.6"
         type: boolean
@@ -145,11 +137,10 @@ on:
       build_all:
         description: "构建全部版本"
         type: boolean
-        default: true
+        default: false  # Matikan, agar hanya A14 yang jalan
 
 jobs:
   # ==================== 获取管理器 ====================
-  # 下载最新的 KernelSU 管理器 APK 和 SUSFS 模块
   get-manager:
     uses: ./.github/workflows/get-manager.yml
     secrets: inherit
@@ -194,7 +185,7 @@ jobs:
 
   # ==================== Android 14 - 6.1 构建 ====================
   build-a14-6-1:
-    if: inputs.build_a14_6_1 || inputs.build_all
+    if: inputs.build_a14_6_1 || inputs.build_all   # Akan berjalan karena default true
     uses: ./.github/workflows/kernel-a14-6-1.yml
     secrets: inherit
     with:
@@ -231,7 +222,6 @@ jobs:
       optimizationLevel: ${{ inputs.optimizationLevel }}
 
   # ==================== 收集补丁冲突文件 ====================
-  # 汇总所有构建任务中的 .rej 文件，方便调试补丁问题
   collect-rejects:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
@@ -269,8 +259,6 @@ jobs:
           if-no-files-found: ignore
 
   # ==================== 创建发布 ====================
-  # 当 release_type 不是 Actions 时，创建 GitHub Release
-  # 仅限原仓库运行，fork 仓库跳过此步骤
   release:
     if: ${{ always() && !cancelled() && inputs.release_type != 'Actions' && github.repository == 'zzh20188/GKI_KernelSU_SUSFS' }}
     runs-on: ubuntu-latest
@@ -284,18 +272,14 @@ jobs:
       - build-a14-6-1
       - build-a15-6-6
 
-    # ==================== 环境变量 ====================
     env:
       REPO_OWNER: ${{ github.repository_owner }}
       REPO_NAME: ${{ github.event.repository.name }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      # ==================== 设置显示名称 ====================
-      # 预计算各种显示名称，简化后续引用
       - name: 设置显示名称
         run: |
-          # KSU 显示名称
           case "${{ inputs.kernelsu_variant }}" in
             "Next")      KSU_NAME="KernelSU-Next" ;;
             "Official")  KSU_NAME="KernelSU" ;;
@@ -305,26 +289,22 @@ jobs:
           esac
           echo "KSU_NAME=$KSU_NAME" >> $GITHUB_ENV
 
-          # 版本信息
           KSU_VER="${{ needs.get-manager.outputs.ksuVer }}"
           SUS_VER="${{ needs.get-manager.outputs.susVer }}"
           echo "KSU_VER=$KSU_VER" >> $GITHUB_ENV
           echo "SUS_VER=$SUS_VER" >> $GITHUB_ENV
 
-          # 功能开关显示
           echo "LZ4_STATUS=${{ inputs.use_zram && '开启' || '未开启' }}" >> $GITHUB_ENV
           echo "BBG_STATUS=${{ inputs.use_bbg && '支持' || '不支持' }}" >> $GITHUB_ENV
           echo "KPM_LINE=${{ inputs.use_kpm && '-> KPM 支持' || '' }}" >> $GITHUB_ENV
           echo "LZ4_SUFFIX=${{ inputs.use_zram && '、LZ4KD' || '' }}" >> $GITHUB_ENV
 
-          # Hook 类型
           if [ "${{ inputs.kernelsu_variant }}" = "SukiSU" ] || [ "${{ inputs.kernelsu_variant }}" = "ReSukiSU" ]; then
             echo "HOOK_TYPE=-> SUSFS Inline Hooks" >> $GITHUB_ENV
           else
             echo "HOOK_TYPE=-> KPROBE Hooks" >> $GITHUB_ENV
           fi
 
-          # Mount 类型
           if [ "${{ inputs.kernelsu_variant }}" = "Official" ]; then
             echo "MOUNT_TYPE=-> OVERLAYFS 支持" >> $GITHUB_ENV
             echo "KSU_SUFFIX=原版" >> $GITHUB_ENV
@@ -333,18 +313,14 @@ jobs:
             echo "KSU_SUFFIX=" >> $GITHUB_ENV
           fi
 
-          # 分支显示
           if [ "${{ inputs.kernelsu_branch }}" = "Dev(开发)" ]; then
             echo "BRANCH_INFO=($KSU_VER)" >> $GITHUB_ENV
           else
             echo "BRANCH_INFO=稳定版" >> $GITHUB_ENV
           fi
 
-          # 发布标题
           echo "RELEASE_NAME=GKI内核: ${KSU_NAME}(${KSU_VER}) & SUSFS ${SUS_VER}" >> $GITHUB_ENV
 
-      # ==================== 验证构建状态 ====================
-      # 确保所有选中的构建任务都成功完成
       - name: 验证构建状态
         run: |
           failed=0
@@ -361,12 +337,9 @@ jobs:
           check_build "${{ inputs.build_a15_6_6 || inputs.build_all }}" "build-a15-6-6" "${{ needs.build-a15-6-6.result }}"
           [[ "$failed" -ne 0 ]] && exit 1 || true
 
-      # ==================== 检出代码 ====================
       - name: 检出代码
         uses: actions/checkout@v4
 
-      # ==================== 确定 KSU 分支 ====================
-      # 根据用户选择确定实际的 Git 分支
       - name: 确定 KSU 分支
         if: inputs.kernelsu_branch == 'Dev(开发)' || inputs.kernelsu_variant == 'MKSU' || inputs.kernelsu_variant == 'SukiSU' || inputs.kernelsu_variant == 'ReSukiSU'
         run: |
@@ -378,8 +351,6 @@ jobs:
           esac
           echo "KSU_BRANCH=$BRANCH" >> $GITHUB_ENV
 
-      # ==================== 获取 KernelSU 提交信息 ====================
-      # 获取当前使用的 KernelSU 版本的 Git 提交信息
       - name: 获取 KernelSU 提交信息
         run: |
           case "${{ inputs.kernelsu_variant }}" in
@@ -403,8 +374,6 @@ jobs:
           echo "KSU_REF=$KSU_REF" >> $GITHUB_ENV
           echo "KSU_URL=$KSU_URL" >> $GITHUB_ENV
 
-      # ==================== 获取 SUSFS 提交信息 ====================
-      # 获取各版本 SUSFS 的 Git 提交信息
       - name: 获取 SUSFS 提交信息
         run: |
           GITLAB_OWNER="simonpunk"
@@ -425,14 +394,11 @@ jobs:
             fi
           done
 
-
-      - name: "⚙️ Configure Kernel Options | 配置内核选项"
+      - name: "⚙️ Configure Kernel Options (hanya untuk release)"
         run: |
           cd kernel_workspace/kernel_platform
-
           echo "⚙️ 正在配置内核编译选项..."
-
-           if [ "${{ github.event.inputs.bbr }}" == "On" ]; then
+          if [ "${{ github.event.inputs.bbr }}" == "On" ]; then
             echo "🌐 启用 BBR 网络算法..."
             echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -442,13 +408,10 @@ jobs:
             echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig
           fi
           if [ "${{ github.event.inputs.KERNEL_VERSION }}" == "6.1" ] || [ "${{ github.event.inputs.KERNEL_VERSION }}" == "6.6" ]; then
-            # Add O2 config
             echo "📦 为6.1 / 6.6加入O2优化..."
             echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> ./common/arch/arm64/configs/gki_defconfig
           fi
 
-      # ==================== 生成发布说明 ====================
-      # 创建包含详细信息的发布说明文档
       - name: 生成发布说明
         run: |
           cat > release_body.md << EOF
@@ -544,51 +507,40 @@ jobs:
           📂 点击下方 **Assets** 展开下载 / Click **Assets** below to download
           EOF
 
-      # ==================== 生成版本标签 ====================
-      # 根据 SUSFS 版本生成递增的发布标签
       - name: 生成版本标签
         run: |
-          # 获取 SUSFS 版本，如果 get-manager 被跳过则使用默认值
           SUS_VERSION="${{ needs.get-manager.outputs.susVer }}"
           if [ -z "$SUS_VERSION" ]; then
             echo "警告: 未获取到 SUSFS 版本，使用默认版本号"
             SUS_VERSION="1.0.0"
           fi
-
           LATEST_TAG=$(gh api repos/$REPO_OWNER/$REPO_NAME/tags --jq '.[0].name' 2>/dev/null | sed 's/-.*//' || echo "")
-
           if [ "$SUS_VERSION" = "$LATEST_TAG" ]; then
             LATEST_TAG=$(gh api repos/$REPO_OWNER/$REPO_NAME/tags --jq '.[0].name')
           else
             LATEST_TAG="$SUS_VERSION-r0"
           fi
-
           NEW_TAG=$(echo "$LATEST_TAG" | awk -F'-r' '{suffix=$2; if (!suffix) suffix=0; suffix++; printf "%s-r%d", $1, suffix}')
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
-
           git tag "$NEW_TAG"
           git push --tags
 
-      # ==================== 下载构建产物 ====================
       - name: 下载构建产物
         uses: actions/download-artifact@v4
         with:
           path: ./downloaded-artifacts
 
-      # ==================== 创建 GitHub Release ====================
       - name: 创建 GitHub Release
         run: |
           PRERELEASE_FLAG=""
           if [ "${{ inputs.release_type }}" == "Pre-Release" ]; then
             PRERELEASE_FLAG="--prerelease"
           fi
-
           gh release create "$NEW_TAG" \
             --title "${{ env.RELEASE_NAME }}" \
             --notes-file release_body.md \
             $PRERELEASE_FLAG
 
-      # ==================== 上传管理器和模块 ====================
       - name: 上传管理器和 SUSFS 模块
         continue-on-error: true
         run: |
@@ -606,18 +558,15 @@ jobs:
             gh release upload "$NEW_TAG" "$f" || true
           done
 
-      # ==================== 上传内核产物 ====================
       - name: 上传内核产物
         run: |
           for file in ./downloaded-artifacts/*_kernel-*/*; do
             [ -d "$file" ] && continue
-            # 跳过 -Rejects 目录中的文件（已在 collect-rejects 中汇总处理）
             [[ "$file" == *-Rejects/* ]] && continue
             echo "上传 $file..."
             gh release upload "$NEW_TAG" "$file"
           done
 
-      # ==================== 构建摘要 ====================
       - name: 构建摘要
         run: |
           echo "## 发布已创建" >> $GITHUB_STEP_SUMMARY
