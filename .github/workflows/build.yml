@@ -664,13 +664,6 @@ jobs:
             fi
           fi
 
-      - name: 设置BBR为默认拥塞算法
-        run: |
-          CONFIG_FILE="$CONFIG/common/arch/arm64/configs/gki_defconfig"
-          echo "Changing to configuration directory: $CONFIG_FILE..."
-          echo "CONFIG_DEFAULT_BBR=y" >> "$CONFIG_FILE"
-           
-
       # ==================== Unicode 绕过修复 ====================
       - name: 应用 Unicode 绕过修复
         if: inputs.enable_susfs
@@ -709,8 +702,6 @@ jobs:
 
           cp $SUKISU_PATCHES/other/zram/zram_patch/${{ inputs.kernel_version }}/lz4k_oplus.patch ./
           patch -p1 -F 3 < lz4k_oplus.patch || true
-
-      
 
       # ==================== 修复 6.6 WiFi/蓝牙兼容性（三星 + 小米） ====================
       - name: 修复 6.6 WiFi/蓝牙兼容性（三星 + 小米）
@@ -860,8 +851,63 @@ jobs:
           CONFIG_TCP_CONG_WESTWOOD=n
           CONFIG_TCP_CONG_HTCP=n
           EOF
+
+      # ==================== Terapkan Optimization Level ====================
+      - name: Terapkan Optimization Level
+        run: |
+          CONFIG_FILE="$DEFCONFIG"
+          echo "Menerapkan optimization level: ${{ inputs.optimization_level }}"
           
+          # Hapus konfigurasi optimasi yang ada
+          sed -i '/CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE/d' "$CONFIG_FILE"
+          sed -i '/CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3/d' "$CONFIG_FILE"
+          sed -i '/CONFIG_CC_OPTIMIZE_FOR_SIZE/d' "$CONFIG_FILE"
           
+          case "${{ inputs.optimization_level }}" in
+            O2)
+              echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> "$CONFIG_FILE"
+              echo "# CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3 is not set" >> "$CONFIG_FILE"
+              echo "# CONFIG_CC_OPTIMIZE_FOR_SIZE is not set" >> "$CONFIG_FILE"
+              ;;
+            O3)
+              echo "# CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE is not set" >> "$CONFIG_FILE"
+              echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3=y" >> "$CONFIG_FILE"
+              echo "# CONFIG_CC_OPTIMIZE_FOR_SIZE is not set" >> "$CONFIG_FILE"
+              ;;
+            Os)
+              echo "# CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE is not set" >> "$CONFIG_FILE"
+              echo "# CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3 is not set" >> "$CONFIG_FILE"
+              echo "CONFIG_CC_OPTIMIZE_FOR_SIZE=y" >> "$CONFIG_FILE"
+              ;;
+          esac
+          
+          echo "✅ Optimization level set to ${{ inputs.optimization_level }}"
+          echo "Hasil konfigurasi:"
+          grep -E "CONFIG_CC_OPTIMIZE" "$CONFIG_FILE" || true
+
+      # ==================== Terapkan Kernel Tick Rate ====================
+      - name: Terapkan Kernel Tick Rate
+        run: |
+          CONFIG_FILE="$DEFCONFIG"
+          TICK="${{ inputs.tick_rate }}"
+          echo "Menerapkan tick rate: $TICK Hz"
+          
+          # Hapus konfigurasi HZ yang ada
+          sed -i '/^CONFIG_HZ_/d' "$CONFIG_FILE"
+          sed -i '/^CONFIG_HZ=/d' "$CONFIG_FILE"
+          sed -i '/^CONFIG_NO_HZ_IDLE/d' "$CONFIG_FILE"
+          
+          if [ "$TICK" != "default" ]; then
+            echo "CONFIG_NO_HZ_IDLE=y" >> "$CONFIG_FILE"
+            echo "CONFIG_HZ=$TICK" >> "$CONFIG_FILE"
+            echo "CONFIG_HZ_${TICK}=y" >> "$CONFIG_FILE"
+            echo "✅ Tick rate set to $TICK Hz"
+          else
+            echo "Menggunakan default tick rate (tidak mengubah konfigurasi)"
+          fi
+          
+          echo "Hasil konfigurasi HZ:"
+          grep -E "CONFIG_HZ" "$CONFIG_FILE" || true
 
       # ==================== Change Kernel Name ====================
       - name: Change Kernel Name
