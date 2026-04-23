@@ -36,6 +36,16 @@ on:
         required: false
         type: string
         default: "Sun Dec 01 08:10:00 UTC 2024"
+      build_user:
+        description: "自定义编译用户 (默认为 build-user)"
+        required: false
+        type: string
+        default: "FUCK-YOU"
+      build_host:
+        description: "自定义编译主机 (默认为 build-host)"
+        required: false
+        type: string
+        default: "NETANYAHU"
       use_zram:
         description: "启用 ZRAM 增强算法"
         required: true
@@ -94,6 +104,14 @@ on:
         required: false
         type: string
         default: "Sun Dec 01 08:10:00 UTC 2024"
+      build_user:
+        required: false
+        type: string
+        default: "FUCK-YOU"
+      build_host:
+        required: false
+        type: string
+        default: "NETANYAHU"
       use_zram:
         required: true
         type: boolean
@@ -178,6 +196,8 @@ jobs:
       ksu_branch: ${{ inputs.kernelsu_branch }}
       version: ${{ inputs.version || '' }}
       build_time: ${{ inputs.build_time || '' }}
+      build_user: ${{ inputs.build_user }}
+      build_host: ${{ inputs.build_host }}
       use_zram: ${{ inputs.use_zram }}
       use_bbg: ${{ inputs.use_bbg }}
       use_kpm: ${{ inputs.use_kpm }}
@@ -185,7 +205,7 @@ jobs:
       enable_susfs: ${{ !inputs.cancel_susfs }}
       tick_rate: ${{ inputs.tickRate }}
       optimization_level: ${{ inputs.optimizationLevel }}
-  # 仅在直接触发时运行，从 main.yml 调用时跳过
+
   get-ksu-manager:
     if: ${{ !inputs.called_from_main }}
     uses: ./.github/workflows/get-manager.yml
