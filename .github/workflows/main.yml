@@ -414,7 +414,7 @@ jobs:
             fi
           done
 
-      - name: "⚙️ Configure kernel optimization and tick rate"
+      - name: "Compiler optimization level"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
         run: |
           CONFIG_FILE="arch/arm64/configs/${{ env.DEFCONFIG_NAME }}";
@@ -454,7 +454,28 @@ jobs:
               echo "CONFIG_CC_OPTIMIZE_FOR_SIZE=y" >> "$CONFIG_FILE"
               ;;
           esac
-         
+
+      - name: "Kernel tick rate (Hz)"
+        working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
+        run: |
+          CONFIG_FILE="arch/arm64/configs/${{ env.DEFCONFIG_NAME }}";
+          
+          # Helper
+          apply_patch() {
+            local url="$1";
+            local file=$(basename "$url")
+            curl -L -o "$file" "$url"
+            patch -p1 < "$file" || echo "::warning::Hunks failed in $file"
+            rm -f "$file"
+          }
+
+          # custom tickrate options patch
+          apply_patch "https://raw.githubusercontent.com/yougotme101/extra_stuff/main/custom-tickrate-options.patch"
+          
+          # Remove existing optimization configs
+          sed -i '/CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE/d' "$CONFIG_FILE"
+          sed -i '/CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3/d' "$CONFIG_FILE"
+          sed -i '/CONFIG_CC_OPTIMIZE_FOR_SIZE/d' "$CONFIG_FILE"
           # Apply selected tick rate
           case "${{ github.event.inputs.tickRate }}" in
           default)
