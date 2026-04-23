@@ -61,6 +61,29 @@ on:
         required: false
         type: boolean
         default: false
+      tickRate:
+        description: "Kernel tick rate (Hz)"
+        required: false
+        type: choice
+        default: "250"
+        options:
+          - "default"
+          - "100"
+          - "250"
+          - "300"
+          - "500"
+          - "600"
+          - "750"
+          - "1000"
+      optimizationLevel:
+        description: "Compiler optimization level"
+        required: false
+        type: choice
+        default: "O2"
+        options:
+          - "O2"
+          - "O3"
+          - "Os"
   workflow_call:
     inputs:
       kernelsu_variant:
@@ -91,6 +114,14 @@ on:
       supp_op:
         required: false
         type: boolean
+      tickRate:
+        required: false
+        type: string
+        default: "250"
+      optimizationLevel:
+        required: false
+        type: string
+        default: "O2"
       called_from_main:
         description: "是否从 main.yml 调用（内部使用）"
         required: false
@@ -148,6 +179,8 @@ jobs:
       use_kpm: ${{ inputs.use_kpm }}
       supp_op: ${{ inputs.supp_op || false }}
       enable_susfs: ${{ !inputs.cancel_susfs }}
+      tick_rate: ${{ inputs.tickRate }}
+      optimization_level: ${{ inputs.optimizationLevel }}
 
   # 仅在直接触发时运行，从 main.yml 调用时跳过
   get-ksu-manager:
