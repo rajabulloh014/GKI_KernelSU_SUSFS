@@ -87,6 +87,10 @@ on:
         description: "启用 KPM 功能"
         type: boolean
         default: true
+      use_rekernel:
+        description: "启用 Re-Kernel 驱动"
+        type: boolean
+        default: false
       cancel_susfs:
         description: "禁用 SUSFS"
         type: boolean
@@ -168,6 +172,7 @@ jobs:
       use_zram: ${{ inputs.use_zram }}
       use_bbg: ${{ inputs.use_bbg }}
       use_kpm: ${{ inputs.use_kpm }}
+      use_rekernel: ${{ inputs.use_rekernel }}
       cancel_susfs: ${{ inputs.cancel_susfs }}
       tickRate: ${{ inputs.tickRate }}
       optimizationLevel: ${{ inputs.optimizationLevel }}
@@ -188,6 +193,7 @@ jobs:
       use_zram: ${{ inputs.use_zram }}
       use_bbg: ${{ inputs.use_bbg }}
       use_kpm: ${{ inputs.use_kpm }}
+      use_rekernel: ${{ inputs.use_rekernel }}
       cancel_susfs: ${{ inputs.cancel_susfs }}
       tickRate: ${{ inputs.tickRate }}
       optimizationLevel: ${{ inputs.optimizationLevel }}
@@ -208,6 +214,7 @@ jobs:
       use_zram: ${{ inputs.use_zram }}
       use_bbg: ${{ inputs.use_bbg }}
       use_kpm: ${{ inputs.use_kpm }}
+      use_rekernel: ${{ inputs.use_rekernel }}
       cancel_susfs: ${{ inputs.cancel_susfs }}
       tickRate: ${{ inputs.tickRate }}
       optimizationLevel: ${{ inputs.optimizationLevel }}
@@ -228,6 +235,7 @@ jobs:
       use_zram: ${{ inputs.use_zram }}
       use_bbg: ${{ inputs.use_bbg }}
       use_kpm: ${{ inputs.use_kpm }}
+      use_rekernel: ${{ inputs.use_rekernel }}
       cancel_susfs: ${{ inputs.cancel_susfs }}
       tickRate: ${{ inputs.tickRate }}
       optimizationLevel: ${{ inputs.optimizationLevel }}
