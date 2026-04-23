@@ -79,6 +79,16 @@ on:
         type: boolean
         default: false
 
+      # ==================== Opsi baru: Tick Rate & Optimization Level ====================
+      tick_rate:
+        required: false
+        type: string
+        default: "250"
+      optimization_level:
+        required: false
+        type: string
+        default: "O2"
+
 jobs:
   build-kernel:
     name: "${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.android_version }}-${{ inputs.os_patch_level }}-${{ inputs.ksu_variant }}"
@@ -111,6 +121,8 @@ jobs:
           echo "ZRAM 增强     : ${{ inputs.use_zram }}"
           echo "BBG 补丁      : ${{ inputs.use_bbg }}"
           echo "KPM 功能      : ${{ inputs.use_kpm }}"
+          echo "Tick Rate     : ${{ inputs.tick_rate }}"
+          echo "Optimization  : ${{ inputs.optimization_level }}"
           echo "Stock Config  : 自动检测 config/stock_defconfig"
           echo "========================================"
 
