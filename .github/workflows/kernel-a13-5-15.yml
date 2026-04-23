@@ -183,7 +183,8 @@ jobs:
       use_kpm: ${{ inputs.use_kpm }}
       supp_op: false
       enable_susfs: ${{ !inputs.cancel_susfs }}
-
+      tick_rate: ${{ inputs.tickRate }}
+      optimization_level: ${{ inputs.optimizationLevel }}
   # 仅在直接触发时运行，从 main.yml 调用时跳过
   get-ksu-manager:
     if: ${{ !inputs.called_from_main }}
