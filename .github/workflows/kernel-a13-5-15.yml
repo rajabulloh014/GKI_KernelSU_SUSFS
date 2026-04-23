@@ -121,6 +121,10 @@ on:
       use_kpm:
         required: true
         type: boolean
+      use_rekernel:
+        required: false
+        type: boolean
+        default: false
       cancel_susfs:
         required: false
         type: boolean
@@ -201,6 +205,7 @@ jobs:
       use_zram: ${{ inputs.use_zram }}
       use_bbg: ${{ inputs.use_bbg }}
       use_kpm: ${{ inputs.use_kpm }}
+      use_rekernel: ${{ inputs.use_rekernel || false }}
       supp_op: false
       enable_susfs: ${{ !inputs.cancel_susfs }}
       tick_rate: ${{ inputs.tickRate }}
