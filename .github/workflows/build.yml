@@ -82,6 +82,15 @@ on:
         required: false
         type: boolean
         default: false
+      better_net:
+        required: true
+        type: boolean
+        default: false
+      adios_enable:
+        required: true
+        type: boolean
+        default: true
+      
 
       # ==================== Opsi baru: Tick Rate & Optimization Level ====================
       tick_rate:
@@ -918,6 +927,54 @@ jobs:
           CONFIG_TCP_CONG_HTCP=n
           EOF
 
+
+
+      - name: 启用网络功能拓展配置 (better_net)
+        if: inputs.better_net
+        working-directory: ${{ env.KERNEL_ROOT }}
+        run: |
+         CONFIG_FILE="$DEFCONFIG"
+         # Netfilter extensions
+         echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> "$CONFIG_FILE"
+         echo "CONFIG_NETFILTER_XT_SET=y" >> "$CONFIG_FILE"
+         # IP set framework
+         echo "CONFIG_IP_SET=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_MAX=65534" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_BITMAP_IP=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_BITMAP_IPMAC=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_BITMAP_PORT=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_HASH_IP=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_HASH_IPMARK=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_HASH_IPPORT=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_HASH_IPPORTIP=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_HASH_IPPORTNET=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_HASH_IPMAC=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_HASH_MAC=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_HASH_NETPORTNET=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_HASH_NET=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_HASH_NETNET=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_HASH_NETPORT=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_HASH_NETIFACE=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP_SET_LIST_SET=y" >> "$CONFIG_FILE"
+         # IPv6 NAT
+         echo "CONFIG_IP6_NF_NAT=y" >> "$CONFIG_FILE"
+         echo "CONFIG_IP6_NF_TARGET_MASQUERADE=y" >> "$CONFIG_FILE"
+         # Opsional: tambahkan patch untuk menyembunyikan CONFIG_IP6_NF_NAT (hindari peringatan boot)
+         cd common
+         if [ -f "$GITHUB_WORKSPACE/other_patch/config.patch" ]; then
+           patch -p1 -F 3 < "$GITHUB_WORKSPACE/other_patch/config.patch" || true
+         else
+           echo "Patch config.patch tidak ditemukan, lewati."
+         fi
+
+      - name: 启用 ADIOS IO 调度器
+        if: inputs.adios_enable
+        working-directory: ${{ env.KERNEL_ROOT }}
+        run: |
+           CONFIG_FILE="$DEFCONFIG"
+           echo "CONFIG_MQ_IOSCHED_ADIOS=y" >> "$CONFIG_FILE"
+           echo "CONFIG_MQ_IOSCHED_DEFAULT_ADIOS=y" >> "$CONFIG_FILE"
+    
       # ==================== Terapkan Optimization Level ====================
       - name: Terapkan Optimization Level
         run: |
