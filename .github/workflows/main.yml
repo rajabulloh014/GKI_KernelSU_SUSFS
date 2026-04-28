@@ -50,6 +50,14 @@ on:
           - Stable(标准)
           - Dev(开发)
         default: Stable(标准)
+      better_net:
+        description: "启用网络功能拓展 (ipset, iptables, IPv6 NAT)"
+        type: boolean
+        default: false
+      adios_enable:
+        description: "启用 ADIOS IO 调度器 (提升 IO 性能)"
+        type: boolean
+        default: true
 
       # ==================== 可选配置 ====================
       version:
