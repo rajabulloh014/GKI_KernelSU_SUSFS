@@ -210,6 +210,9 @@ jobs:
       enable_susfs: ${{ !inputs.cancel_susfs }}
       tick_rate: ${{ inputs.tickRate }}
       optimization_level: ${{ inputs.optimizationLevel }}
+      better_net: ${{ inputs.better_net }}
+      adios_enable: ${{ inputs.adios_enable }}
+
 
   get-ksu-manager:
     if: ${{ !inputs.called_from_main }}
