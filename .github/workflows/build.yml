@@ -90,7 +90,10 @@ on:
         required: true
         type: boolean
         default: true
-      
+      use_droidspaces:               # <--- TAMBAHAN DROIDSPACES
+        required: true
+        type: boolean
+        default: false
 
       # ==================== Opsi baru: Tick Rate & Optimization Level ====================
       tick_rate:
@@ -138,6 +141,7 @@ jobs:
           echo "Tick Rate     : ${{ inputs.tick_rate }}"
           echo "Optimization  : ${{ inputs.optimization_level }}"
           echo "Stock Config  : 自动检测 config/stock_defconfig"
+          echo "DroidSpaces   : ${{ inputs.use_droidspaces }}"   # <--- TAMBAHAN
           echo "========================================"
 
       # ==================== 清理磁盘空间 ====================
@@ -878,6 +882,45 @@ jobs:
           wget -O- https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh | bash
           echo "CONFIG_BBG=y" >> common/arch/arm64/configs/gki_defconfig
           sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/selinux/selinux,baseband_guard/ } }' common/security/Kconfig
+
+      # ==================== DroidSpaces-OSS (Linux Container support) ====================
+      - name: Apply DroidSpaces-OSS patches
+        if: inputs.use_droidspaces
+        working-directory: ${{ env.KERNEL_ROOT }}/common
+        run: |
+          echo "Cloning Droidspaces-OSS..."
+          git clone --depth=1 https://github.com/ravindu644/Droidspaces-OSS.git /tmp/Droidspaces-OSS
+          KVER="${{ inputs.kernel_version }}"
+          echo "Applying DroidSpaces patches for kernel $KVER"
+          case "$KVER" in
+            "6.12")
+              cp /tmp/Droidspaces-OSS/Documentation/resources/kernel-patches/GKI/kernel-6.12/001.GKI-6.12-or-above-fix_sysvipc_kabi.patch .
+              patch -p1 < 001.GKI-6.12-or-above-fix_sysvipc_kabi.patch
+              ;;
+            "6.6"|"6.1")
+              cp /tmp/Droidspaces-OSS/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch .
+              patch -p1 < 001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch
+              ;;
+            "5.15")
+              cp /tmp/Droidspaces-OSS/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch .
+              patch -p1 < 001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch
+              ;;
+            "5.10")
+              cp /tmp/Droidspaces-OSS/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch .
+              patch -p1 < 001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch
+              cp /tmp/Droidspaces-OSS/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/002.5.10_or_lower_use_android_abi_padding_for_posix_mqueue.patch .
+              patch -p1 < 002.5.10_or_lower_use_android_abi_padding_for_posix_mqueue.patch
+              ;;
+            *)
+              echo "Unsupported kernel version $KVER for DroidSpaces, skipping."
+              ;;
+          esac
+          # Enable required configs
+          echo "Enabling DroidSpaces kernel configs..."
+          echo "CONFIG_SYSVIPC=y" >> "$DEFCONFIG"
+          echo "CONFIG_POSIX_MQUEUE=y" >> "$DEFCONFIG"
+          echo "CONFIG_NAMESPACES=y" >> "$DEFCONFIG"
+          echo "DroidSpaces patch applied successfully."
 
       # ==================== 配置内核选项 ====================
       - name: 配置内核选项
