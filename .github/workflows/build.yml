@@ -915,14 +915,35 @@ jobs:
               echo "Unsupported kernel version $KVER for DroidSpaces, skipping."
               ;;
           esac
-          # Enable required configs
+          # Enable required configs (GKI modern - berdasarkan panduan DroidSpaces)
           echo "Enabling DroidSpaces kernel configs..."
+
+          # === WAJIB (Minimal untuk container) ===
           echo "CONFIG_SYSVIPC=y" >> "$DEFCONFIG"
           echo "CONFIG_POSIX_MQUEUE=y" >> "$DEFCONFIG"
           echo "CONFIG_NAMESPACES=y" >> "$DEFCONFIG"
-          echo "DroidSpaces patch applied successfully."
+          echo "CONFIG_IPC_NS=y" >> "$DEFCONFIG"
+          echo "CONFIG_PID_NS=y" >> "$DEFCONFIG"
+          echo "CONFIG_DEVTMPFS=y" >> "$DEFCONFIG"
 
+          # === OPSIONAL (Dukungan jaringan & firewall - sangat disarankan) ===
+          echo "CONFIG_NET_NS=y" >> "$DEFCONFIG"
+          echo "CONFIG_VETH=y" >> "$DEFCONFIG"
+          echo "CONFIG_BRIDGE=y" >> "$DEFCONFIG"
+          echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> "$DEFCONFIG"
+          echo "CONFIG_NETFILTER_XT_TARGET_REJECT=y" >> "$DEFCONFIG"
+          echo "CONFIG_NETFILTER_XT_TARGET_LOG=y" >> "$DEFCONFIG"
+          echo "CONFIG_NETFILTER_XT_MATCH_RECENT=y" >> "$DEFCONFIG"
+          echo "CONFIG_IP_SET=y" >> "$DEFCONFIG"
+          echo "CONFIG_IP_SET_HASH_IP=y" >> "$DEFCONFIG"
+          echo "CONFIG_IP_SET_HASH_NET=y" >> "$DEFCONFIG"
+          echo "CONFIG_NETFILTER_XT_SET=y" >> "$DEFCONFIG"
+
+          echo "DroidSpaces patch applied successfully with modern GKI configs."
+    
+      
       # ==================== 配置内核选项 ====================
+      
       - name: 配置内核选项
         working-directory: ${{ env.KERNEL_ROOT }}
         run: |
