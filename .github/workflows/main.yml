@@ -134,6 +134,11 @@ on:
           - "600"
           - "750"
           - "1000"
+      # ==================== DroidSpaces ====================
+      use_droidspaces:
+        description: "Enable DroidSpaces (Linux Container support)"
+        type: boolean
+        default: false
       # ==================== 构建版本选择 ====================
       build_a12_5_10:
         description: "Android 12 - 5.10"
@@ -184,6 +189,7 @@ jobs:
       cancel_susfs: ${{ inputs.cancel_susfs }}
       tickRate: ${{ inputs.tickRate }}
       optimizationLevel: ${{ inputs.optimizationLevel }}
+      use_droidspaces: ${{ inputs.use_droidspaces }}
       called_from_main: true
 
   # ==================== Android 13 - 5.15 构建 ====================
@@ -205,6 +211,7 @@ jobs:
       cancel_susfs: ${{ inputs.cancel_susfs }}
       tickRate: ${{ inputs.tickRate }}
       optimizationLevel: ${{ inputs.optimizationLevel }}
+      use_droidspaces: ${{ inputs.use_droidspaces }}
       called_from_main: true
 
   # ==================== Android 14 - 6.1 构建 ====================
@@ -226,6 +233,7 @@ jobs:
       cancel_susfs: ${{ inputs.cancel_susfs }}
       tickRate: ${{ inputs.tickRate }}
       optimizationLevel: ${{ inputs.optimizationLevel }}
+      use_droidspaces: ${{ inputs.use_droidspaces }}
       called_from_main: true
 
   # ==================== Android 15 - 6.6 构建 ====================
@@ -247,6 +255,7 @@ jobs:
       cancel_susfs: ${{ inputs.cancel_susfs }}
       tickRate: ${{ inputs.tickRate }}
       optimizationLevel: ${{ inputs.optimizationLevel }}
+      use_droidspaces: ${{ inputs.use_droidspaces }}
       called_from_main: true
 
   # ==================== 收集补丁冲突文件 ====================
