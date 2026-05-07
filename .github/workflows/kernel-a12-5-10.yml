@@ -97,6 +97,10 @@ on:
         description: "启用 ADIOS IO 调度器 (提升 IO 性能)"
         type: boolean
         default: true
+      use_droidspaces:
+        description: "Enable DroidSpaces (Linux Container support)"
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       kernelsu_variant:
@@ -157,6 +161,10 @@ on:
         description: "启用 ADIOS IO 调度器 (提升 IO 性能)"
         type: boolean
         default: true
+      use_droidspaces:
+        description: "Enable DroidSpaces (Linux Container support)"
+        type: boolean
+        default: false
 
 jobs:
   build-kernels-a12-5-10:
@@ -255,6 +263,7 @@ jobs:
       optimization_level: ${{ inputs.optimizationLevel }}
       better_net: ${{ inputs.better_net }}
       adios_enable: ${{ inputs.adios_enable }}
+      use_droidspaces: ${{ inputs.use_droidspaces }}
 
   get-ksu-manager:
     if: ${{ !inputs.called_from_main }}
